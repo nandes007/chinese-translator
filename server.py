@@ -1,8 +1,10 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.responses import HTMLResponse
 import logging
 import numpy as np
 from faster_whisper import WhisperModel
 import io
+import os
 
 app = FastAPI()
 
@@ -18,15 +20,23 @@ logger.info("Model siap!")
 
 # Parameter Audio
 SAMPLE_RATE = 16000
-CHANNELS = 2  # VooV/Windows default biasanya stereo. Sesuaikan jika mono (1)
+CHANNELS = 1  # Menggunakan mono (1) agar kompatibel dengan client web
 BYTES_PER_SAMPLE = 2
 # Hitung target ukuran byte untuk 3 detik audio
 TARGET_BUFFER_SIZE = SAMPLE_RATE * CHANNELS * BYTES_PER_SAMPLE * 3 
 
+@app.get("/", response_class=HTMLResponse)
+async def get_index():
+    html_path = os.path.join(os.path.dirname(__file__), "index.html")
+    if os.path.exists(html_path):
+        with open(html_path, "r", encoding="utf-8") as f:
+            return f.read()
+    return "<h3>index.html tidak ditemukan</h3>"
+
 @app.websocket("/ws/audio")
 async def audio_endpoint(websocket: WebSocket):
     await websocket.accept()
-    logger.info("Klien Windows terhubung. Mulai mendengarkan...")
+    logger.info("Klien terhubung. Mulai mendengarkan...")
     
     audio_buffer = bytearray()
     
@@ -58,8 +68,10 @@ async def audio_endpoint(websocket: WebSocket):
                 
                 if text_result.strip():
                     logger.info(f"🗣️ Mandarin: {text_result}")
+                    # Kirim balik teks hasil transkripsi ke web client
+                    await websocket.send_text(text_result)
                 
     except WebSocketDisconnect:
-        logger.info("Klien Windows terputus.")
+        logger.info("Klien terputus.")
     except Exception as e:
         logger.error(f"Terjadi kesalahan: {e}")

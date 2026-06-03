@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cindo Translator - Real-time Speech Translation</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(22, 27, 45, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #4f46e5;
+            --primary-glow: rgba(79, 70, 229, 0.4);
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.4);
+            --danger: #ef4444;
+            --danger-glow: rgba(239, 68, 68, 0.4);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --accent-cyan: #06b6d4;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a5b4fc 0%, #6366f1 50%, #22d3ee 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+            letter-spacing: -0.025em;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 24px;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .connection-panel {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 20px;
+        }
+
+        .input-group {
+            flex: 1;
+            min-width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-group label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .input-field {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .input-field:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            outline: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #4338ca;
+            box-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background: #059669;
+            box-shadow: 0 0 12px var(--success-glow);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: #dc2626;
+            box-shadow: 0 0 12px var(--danger-glow);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            transition: all 0.3s;
+        }
+
+        .status-badge.connected {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-badge .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: currentColor;
+        }
+
+        .status-badge.active-recording .dot {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.4; }
+            100% { transform: scale(0.9); opacity: 1; }
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .control-btn {
+            flex-direction: column;
+            padding: 16px;
+            height: auto;
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+            background: rgba(22, 27, 45, 0.4);
+            color: var(--text-main);
+        }
+
+        .control-btn svg {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 6px;
+            transition: transform 0.2s;
+        }
+
+        .control-btn:hover:not(:disabled) {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        .control-btn:hover:not(:disabled) svg {
+            transform: scale(1.1);
+        }
+
+        .control-btn.active {
+            background: var(--danger);
+            border-color: var(--danger);
+            box-shadow: 0 0 15px var(--danger-glow);
+        }
+
+        .control-btn.active:hover {
+            background: #dc2626;
+        }
+
+        .transcript-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .transcript-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .transcript-header h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .transcript-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-icon {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+        }
+
+        .btn-icon:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .transcript-box {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            height: 300px;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            scroll-behavior: smooth;
+        }
+
+        /* Custom Scrollbar */
+        .transcript-box::-webkit-scrollbar {
+            width: 8px;
+        }
+        .transcript-box::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        .transcript-box::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+        .transcript-box::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .log-item {
+            padding: 10px 14px;
+            border-radius: 8px;
+            line-height: 1.5;
+            font-size: 0.95rem;
+            animation: fadeIn 0.3s ease;
+            max-width: 90%;
+        }
+
+        .log-item.system {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-muted);
+            font-style: italic;
+            font-size: 0.85rem;
+            align-self: center;
+            max-width: 100%;
+            text-align: center;
+            border: 1px dashed rgba(255, 255, 255, 0.05);
+        }
+
+        .log-item.transcription {
+            background: rgba(79, 70, 229, 0.15);
+            border-left: 3px solid var(--primary);
+            color: var(--text-main);
+            align-self: flex-start;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            background: rgba(16, 185, 129, 0.95);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Cindo Translator Live</h1>
+        <p>Terjemahan real-time bahasa Mandarin langsung dari Mikrofon atau Desktop Audio</p>
+    </header>
+
+    <div class="card">
+        <!-- Panel Koneksi -->
+        <div class="connection-panel">
+            <div class="input-group">
+                <label for="ws-url">WebSocket URL Server</label>
+                <input type="text" id="ws-url" class="input-field" value="">
+            </div>
+            <button id="btn-connect" class="btn btn-primary" style="margin-top: 18px;">Hubungkan</button>
+            <div id="status-badge" class="status-badge" style="margin-top: 18px;">
+                <span class="dot"></span>
+                <span id="status-text">Terputus</span>
+            </div>
+        </div>
+
+        <!-- Panel Kontrol Audio -->
+        <div class="control-grid">
+            <button id="btn-mic" class="btn control-btn" disabled>
+                <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
+                <span>Mulai Mikrofon</span>
+            </button>
+            <button id="btn-desktop" class="btn control-btn" disabled>
+                <svg fill="currentColor" viewBox="0 0 24 24"><path d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7l-2 3v1h8v-1l-2-3h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H3V4h18v12z"/></svg>
+                <span>Mulai Desktop Audio</span>
+            </button>
+        </div>
+
+        <!-- Terminal Hasil Transkripsi -->
+        <div class="transcript-container">
+            <div class="transcript-header">
+                <h2>Log Transkripsi (Mandarin)</h2>
+                <div class="transcript-actions">
+                    <button id="btn-copy" class="btn btn-icon">Salin Semua</button>
+                    <button id="btn-clear" class="btn btn-icon">Hapus Layar</button>
+                </div>
+            </div>
+            <div id="transcript-box" class="transcript-box">
+                <div class="log-item system">Belum terhubung ke server websocket. Silakan hubungkan terlebih dahulu.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="toast">Teks disalin ke clipboard!</div>
+
+<script>
+    // Inisialisasi WebSocket URL Default sesuai dengan host browser
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const defaultHost = window.location.host ? window.location.host : 'localhost:9000';
+    document.getElementById('ws-url').value = `${protocol}//${defaultHost}/ws/audio`;
+
+    // DOM Elements
+    const wsUrlInput = document.getElementById('ws-url');
+    const btnConnect = document.getElementById('btn-connect');
+    const statusBadge = document.getElementById('status-badge');
+    const statusText = document.getElementById('status-text');
+    const btnMic = document.getElementById('btn-mic');
+    const btnDesktop = document.getElementById('btn-desktop');
+    const transcriptBox = document.getElementById('transcript-box');
+    const btnCopy = document.getElementById('btn-copy');
+    const btnClear = document.getElementById('btn-clear');
+    const toast = document.getElementById('toast');
+
+    // Global States
+    let socket = null;
+    let audioContext = null;
+    let mediaStream = null;
+    let processorNode = null;
+    let audioSourceNode = null;
+    let isRecording = false;
+    let activeSource = null; // 'mic' or 'desktop'
+
+    // Formatter Log / UI Helper (XSS Safe - textContent only)
+    function addLog(text, type = 'system') {
+        const item = document.createElement('div');
+        item.className = `log-item ${type}`;
+        item.textContent = text;
+        transcriptBox.appendChild(item);
+        transcriptBox.scrollTop = transcriptBox.scrollHeight;
+    }
+
+    function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // Connect & Disconnect WebSocket
+    btnConnect.addEventListener('click', () => {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            disconnectServer();
+        } else {
+            connectServer();
+        }
+    });
+
+    function connectServer() {
+        const url = wsUrlInput.value.trim();
+        if (!url) {
+            addLog("Error: WebSocket URL tidak boleh kosong.", 'system');
+            return;
+        }
+
+        btnConnect.disabled = true;
+        btnConnect.textContent = "Menghubungkan...";
+        addLog(`Mencoba terhubung ke ${url}...`, 'system');
+
+        try {
+            socket = new WebSocket(url);
+            
+            socket.onopen = () => {
+                btnConnect.disabled = false;
+                btnConnect.textContent = "Putuskan";
+                btnConnect.className = "btn btn-danger";
+                
+                statusBadge.className = "status-badge connected";
+                statusText.textContent = "Terhubung";
+                
+                btnMic.disabled = false;
+                btnDesktop.disabled = false;
+                
+                addLog("Terhubung ke server translation.", 'system');
+            };
+
+            socket.onmessage = (event) => {
+                const messageText = event.data;
+                addLog(`🗣️ Mandarin: ${messageText}`, 'transcription');
+            };
+
+            socket.onclose = () => {
+                handleDisconnectUI();
+                addLog("Koneksi ditutup oleh server atau terputus.", 'system');
+            };
+
+            socket.onerror = (error) => {
+                addLog("WebSocket Error: Gagal terhubung ke server.", 'system');
+                handleDisconnectUI();
+            };
+
+        } catch (e) {
+            addLog(`Error: ${e.message}`, 'system');
+            handleDisconnectUI();
+        }
+    }
+
+    function disconnectServer() {
+        stopRecording();
+        if (socket) {
+            socket.close();
+        }
+    }
+
+    function handleDisconnectUI() {
+        socket = null;
+        btnConnect.disabled = false;
+        btnConnect.textContent = "Hubungkan";
+        btnConnect.className = "btn btn-primary";
+        
+        statusBadge.className = "status-badge";
+        statusText.textContent = "Terputus";
+        
+        btnMic.disabled = true;
+        btnDesktop.disabled = true;
+        btnMic.classList.remove('active');
+        btnDesktop.classList.remove('active');
+        btnMic.querySelector('span').textContent = "Mulai Mikrofon";
+        btnDesktop.querySelector('span').textContent = "Mulai Desktop Audio";
+    }
+
+    // Web Audio Recording Logic
+    async function startRecording(sourceType) {
+        if (isRecording) {
+            stopRecording();
+            return;
+        }
+
+        addLog("Mempersiapkan perekaman audio...", 'system');
+
+        try {
+            if (sourceType === 'mic') {
+                mediaStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    },
+                    video: false
+                });
+            } else if (sourceType === 'desktop') {
+                // getDisplayMedia untuk macOS/Windows loopback audio secara native
+                const displayStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: {
+                        width: 1,
+                        height: 1,
+                        frameRate: 1
+                    },
+                    audio: {
+                        echoCancellation: false,
+                        noiseSuppression: false
+                    }
+                });
+
+                const audioTracks = displayStream.getAudioTracks();
+                if (audioTracks.length === 0) {
+                    // Bersihkan stream video jika ada
+                    displayStream.getTracks().forEach(track => track.stop());
+                    // Gunakan in-UI notification ketimbang alert()
+                    addLog("Peringatan: Pastikan Anda mencentang opsi 'Share system audio' saat membagikan layar.", 'system');
+                    return;
+                }
+
+                // Berhenti track video karena kita tidak butuh videonya
+                displayStream.getVideoTracks().forEach(track => track.stop());
+                
+                // Gunakan hanya audio track
+                mediaStream = new MediaStream(audioTracks);
+            }
+
+            // Inisialisasi AudioContext dengan target sample rate 16000 Hz
+            audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                sampleRate: 16000
+            });
+
+            audioSourceNode = audioContext.createMediaStreamSource(mediaStream);
+            
+            // ScriptProcessorNode untuk memproses chunk data.
+            // Gunakan buffer size 4096. 4096 samples pada 16kHz adalah ~0.25 detik.
+            processorNode = audioContext.createScriptProcessor(4096, 1, 1);
+            
+            processorNode.onaudioprocess = (e) => {
+                if (!isRecording || !socket || socket.readyState !== WebSocket.OPEN) return;
+                
+                const inputData = e.inputBuffer.getChannelData(0); // Float32Array (Mono)
+                
+                // Konversi Float32Array [-1.0, 1.0] ke Int16Array PCM 16-bit
+                const pcmData = new Int16Array(inputData.length);
+                for (let i = 0; i < inputData.length; i++) {
+                    const sample = Math.max(-1, Math.min(1, inputData[i]));
+                    pcmData[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+                }
+                
+                // Kirim binary buffer ke websocket server
+                socket.send(pcmData.buffer);
+            };
+
+            audioSourceNode.connect(processorNode);
+            processorNode.connect(audioContext.destination);
+
+            isRecording = true;
+            activeSource = sourceType;
+
+            statusBadge.className = "status-badge connected active-recording";
+            statusText.textContent = "Merekam";
+
+            if (sourceType === 'mic') {
+                btnMic.classList.add('active');
+                btnMic.querySelector('span').textContent = "Berhenti Mikrofon";
+                btnDesktop.disabled = true;
+                addLog("Perekaman mikrofon berjalan. Mulailah berbicara Mandarin...", 'system');
+            } else {
+                btnDesktop.classList.add('active');
+                btnDesktop.querySelector('span').textContent = "Berhenti Desktop Audio";
+                btnMic.disabled = true;
+                addLog("Perekaman desktop audio berjalan. Putar audio Mandarin...", 'system');
+            }
+
+        } catch (err) {
+            addLog(`Gagal mengakses perangkat: ${err.message}`, 'system');
+            stopRecording();
+        }
+    }
+
+    function stopRecording() {
+        if (!isRecording) return;
+
+        isRecording = false;
+
+        // Bersihkan node audio
+        if (processorNode) {
+            processorNode.disconnect();
+            processorNode = null;
+        }
+        if (audioSourceNode) {
+            audioSourceNode.disconnect();
+            audioSourceNode = null;
+        }
+        if (audioContext) {
+            if (audioContext.state !== 'closed') {
+                audioContext.close();
+            }
+            audioContext = null;
+        }
+
+        // Hentikan semua track media
+        if (mediaStream) {
+            mediaStream.getTracks().forEach(track => track.stop());
+            mediaStream = null;
+        }
+
+        // Kembalikan status tombol
+        btnMic.disabled = false;
+        btnDesktop.disabled = false;
+        btnMic.classList.remove('active');
+        btnDesktop.classList.remove('active');
+        btnMic.querySelector('span').textContent = "Mulai Mikrofon";
+        btnDesktop.querySelector('span').textContent = "Mulai Desktop Audio";
+
+        statusBadge.className = "status-badge connected";
+        statusText.textContent = "Terhubung";
+
+        addLog(`Perekaman ${activeSource === 'mic' ? 'mikrofon' : 'desktop audio'} dihentikan.`, 'system');
+        activeSource = null;
+    }
+
+    // Event Listeners Kontrol Audio
+    btnMic.addEventListener('click', () => startRecording('mic'));
+    btnDesktop.addEventListener('click', () => startRecording('desktop'));
+
+    // Salin Teks
+    btnCopy.addEventListener('click', () => {
+        const textElements = transcriptBox.querySelectorAll('.log-item.transcription');
+        if (textElements.length === 0) {
+            showToast("Tidak ada teks transkripsi untuk disalin.");
+            return;
+        }
+        const textToCopy = Array.from(textElements)
+            .map(el => el.textContent.replace('🗣️ Mandarin: ', ''))
+            .join('\n');
+        
+        navigator.clipboard.writeText(textToCopy)
+            .then(() => showToast("Teks disalin ke clipboard!"))
+            .catch(err => addLog(`Gagal menyalin: ${err.message}`, 'system'));
+    });
+
+    // Bersihkan Log/Layar
+    btnClear.addEventListener('click', () => {
+        // Gunakan replaceChildren untuk membersihkan element secara aman sesuai modul sanitasi XSS
+        transcriptBox.replaceChildren();
+        addLog("Layar dibersihkan.", 'system');
+    });
+</script>
+</body>
+</html>
