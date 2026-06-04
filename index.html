@@ -604,6 +604,32 @@
         btnDesktop.querySelector('span').textContent = "Mulai Desktop Audio";
     }
 
+    function downsampleBuffer(buffer, inputSampleRate, outputSampleRate) {
+        if (inputSampleRate === outputSampleRate) {
+            return buffer;
+        }
+        if (inputSampleRate < outputSampleRate) {
+            return buffer;
+        }
+        const sampleRateRatio = inputSampleRate / outputSampleRate;
+        const newLength = Math.round(buffer.length / sampleRateRatio);
+        const result = new Float32Array(newLength);
+        let offsetResult = 0;
+        let offsetBuffer = 0;
+        while (offsetResult < result.length) {
+            const nextOffsetBuffer = Math.round((offsetResult + 1) * sampleRateRatio);
+            let accum = 0, count = 0;
+            for (let i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
+                accum += buffer[i];
+                count++;
+            }
+            result[offsetResult] = count > 0 ? accum / count : 0;
+            offsetResult++;
+            offsetBuffer = nextOffsetBuffer;
+        }
+        return result;
+    }
+
     // Web Audio Recording Logic
     async function startRecording(sourceType) {
         if (isRecording) {
@@ -653,10 +679,8 @@
                 mediaStream = new MediaStream(audioTracks);
             }
 
-            // Inisialisasi AudioContext dengan target sample rate 16000 Hz
-            audioContext = new (window.AudioContext || window.webkitAudioContext)({
-                sampleRate: 16000
-            });
+            // Inisialisasi AudioContext dengan sample rate default browser
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
             audioSourceNode = audioContext.createMediaStreamSource(mediaStream);
             
@@ -668,11 +692,12 @@
                 if (!isRecording || !socket || socket.readyState !== WebSocket.OPEN) return;
                 
                 const inputData = e.inputBuffer.getChannelData(0); // Float32Array (Mono)
+                const downsampledData = downsampleBuffer(inputData, audioContext.sampleRate, 16000);
                 
                 // Konversi Float32Array [-1.0, 1.0] ke Int16Array PCM 16-bit
-                const pcmData = new Int16Array(inputData.length);
-                for (let i = 0; i < inputData.length; i++) {
-                    const sample = Math.max(-1, Math.min(1, inputData[i]));
+                const pcmData = new Int16Array(downsampledData.length);
+                for (let i = 0; i < downsampledData.length; i++) {
+                    const sample = Math.max(-1, Math.min(1, downsampledData[i]));
                     pcmData[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
                 }
                 
