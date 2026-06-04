@@ -374,6 +374,32 @@
             transform: translateY(0);
             opacity: 1;
         }
+
+        .translation-bubble {
+            background: rgba(79, 70, 229, 0.08);
+            border-left: 4px solid var(--primary);
+            border-radius: 4px 12px 12px 12px;
+            align-self: flex-start;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-width: 90%;
+            padding: 12px 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.3s ease;
+        }
+        .zh-text {
+            font-size: 1.05rem;
+            font-weight: 500;
+            color: var(--text-main);
+        }
+        .id-text {
+            font-size: 0.95rem;
+            color: var(--accent-cyan);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding-top: 6px;
+            margin-top: 2px;
+        }
     </style>
 </head>
 <body>
@@ -464,6 +490,24 @@
         transcriptBox.scrollTop = transcriptBox.scrollHeight;
     }
 
+    function addTranslationLog(zhText, idText) {
+        const item = document.createElement('div');
+        item.className = 'log-item translation-bubble';
+        
+        const zhPart = document.createElement('div');
+        zhPart.className = 'zh-text';
+        zhPart.textContent = '🗣️ ' + zhText;
+        
+        const idPart = document.createElement('div');
+        idPart.className = 'id-text';
+        idPart.textContent = '🇮🇩 ' + idText;
+        
+        item.appendChild(zhPart);
+        item.appendChild(idPart);
+        transcriptBox.appendChild(item);
+        transcriptBox.scrollTop = transcriptBox.scrollHeight;
+    }
+
     function showToast(message) {
         toast.textContent = message;
         toast.classList.add('show');
@@ -508,8 +552,16 @@
             };
 
             socket.onmessage = (event) => {
-                const messageText = event.data;
-                addLog(`🗣️ Mandarin: ${messageText}`, 'transcription');
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.zh && data.id) {
+                        addTranslationLog(data.zh, data.id);
+                    } else {
+                        addLog(event.data, 'transcription');
+                    }
+                } catch (e) {
+                    addLog(event.data, 'transcription');
+                }
             };
 
             socket.onclose = () => {
@@ -703,14 +755,18 @@
 
     // Salin Teks
     btnCopy.addEventListener('click', () => {
-        const textElements = transcriptBox.querySelectorAll('.log-item.transcription');
-        if (textElements.length === 0) {
+        const bubbles = transcriptBox.querySelectorAll('.translation-bubble');
+        if (bubbles.length === 0) {
             showToast("Tidak ada teks transkripsi untuk disalin.");
             return;
         }
-        const textToCopy = Array.from(textElements)
-            .map(el => el.textContent.replace('🗣️ Mandarin: ', ''))
-            .join('\n');
+        const textToCopy = Array.from(bubbles)
+            .map(b => {
+                const zhText = b.querySelector('.zh-text').textContent.replace('🗣️ ', '');
+                const idText = b.querySelector('.id-text').textContent.replace('🇮🇩 ', '');
+                return `Mandarin: ${zhText}\nIndonesia: ${idText}`;
+            })
+            .join('\n\n');
         
         navigator.clipboard.writeText(textToCopy)
             .then(() => showToast("Teks disalin ke clipboard!"))
