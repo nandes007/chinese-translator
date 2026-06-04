@@ -5,7 +5,7 @@ import queue
 
 # 1. Buka koneksi ke server FastAPI di WSL
 # URL ini harus sama dengan route yang ada di FastAPI
-WS_URL = "ws://localhost:9000/ws/audio"
+WS_URL = "ws://localhost:9099/ws/audio"
 ws = websocket.WebSocket()
 
 try:

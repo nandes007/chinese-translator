@@ -44,7 +44,7 @@ async def receive_responses(websocket):
         pass
 
 async def main():
-    uri = "ws://127.0.0.1:9000/ws/audio"
+    uri = "ws://127.0.0.1:9099/ws/audio"
     wav_path = "dummy_chinese.wav"
     
     print(f"Mencoba menyambung ke server di {uri}...")
