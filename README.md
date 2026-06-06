@@ -10,6 +10,8 @@ In our company, we frequently collaborate with a team based in Beijing, China. W
 
 To bridge this language barrier and facilitate smooth collaboration, this project was developed. It captures system/meeting audio (or microphone input) in real time, transcribes the Mandarin speech, translates it into Indonesian, and displays it instantly in a clean web interface.
 
+Additionally, this project serves as a practical codebase to learn, expand, and improve my knowledge of **Artificial Intelligence (AI)**—specifically exploring real-time Speech-to-Text (STT) APIs, building custom voice activity detection (VAD), and orchestrating Large Language Model (LLM) translation endpoints.
+
 ---
 
 ## 🛠️ Tech Stack & Architecture
