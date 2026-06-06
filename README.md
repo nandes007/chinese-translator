@@ -1,6 +1,6 @@
-# Cindo Translator 🇨🇳 ➡️ 🇮🇩
+# Chinese Translator 🇨🇳 ➡️ 🇮🇩
 
-**Cindo Translator** is a real-time speech translation system designed to translate spoken Mandarin (Chinese) to Indonesian (Bahasa Indonesia).
+**Chinese Translator** is a real-time speech translation system designed to translate spoken Mandarin (Chinese) to Indonesian (Bahasa Indonesia).
 
 ---
 
@@ -144,5 +144,3 @@ If you want to test the translation pipeline without a live meeting:
 ## Demo
 
 https://github.com/user-attachments/assets/aeed8d73-90e2-4428-b410-0bb269643c06
-
-
