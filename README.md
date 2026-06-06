@@ -140,3 +140,9 @@ If you want to test the translation pipeline without a live meeting:
 - `client.py`: Windows-specific audio capturing client (using WASAPI).
 - `Makefile`: Quick shortcuts for developer workflows.
 - `pyproject.toml` & `uv.lock`: Dependency definitions managed by `uv`.
+
+## Demo
+
+https://github.com/user-attachments/assets/aeed8d73-90e2-4428-b410-0bb269643c06
+
+
