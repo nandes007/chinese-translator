@@ -52,7 +52,7 @@ brew install uv
 
 ```bash
 git clone <repository-url>
-cd cindo-translator
+cd chinese-translator
 ```
 
 ### 2. Configure Environment Variables
@@ -106,7 +106,7 @@ http://127.0.0.1:9099
 ### Step 3: Capture VOOV Meeting Audio
 
 1. Open **VOOV Meeting** and join your session.
-2. In the Cindo Translator Web UI, click **"Hubungkan"** to open the WebSocket connection.
+2. In the Chinese Translator Web UI, click **"Hubungkan"** to open the WebSocket connection.
 3. Click **"Mulai Desktop Audio"**.
 4. A browser prompt will ask you to share a screen, window, or tab.
    - **On Chrome (macOS/Windows)**: Select the VOOV Meeting window or your entire screen.

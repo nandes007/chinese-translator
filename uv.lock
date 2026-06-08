@@ -140,7 +140,7 @@ wheels = [
 ]
 
 [[package]]
-name = "cindo-translator"
+name = "chinese-translator"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
