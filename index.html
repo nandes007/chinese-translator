@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -407,55 +407,55 @@
 <div class="container">
     <header>
         <h1>Chinese Translator Live</h1>
-        <p>Terjemahan real-time bahasa Mandarin langsung dari Mikrofon atau Desktop Audio</p>
+        <p>Real-time Mandarin translation directly from Microphone or Desktop Audio</p>
     </header>
 
     <div class="card">
-        <!-- Panel Koneksi -->
+        <!-- Connection Panel -->
         <div class="connection-panel">
             <div class="input-group">
-                <label for="ws-url">WebSocket URL Server</label>
+                <label for="ws-url">WebSocket Server URL</label>
                 <input type="text" id="ws-url" class="input-field" value="">
             </div>
-            <button id="btn-connect" class="btn btn-primary" style="margin-top: 18px;">Hubungkan</button>
+            <button id="btn-connect" class="btn btn-primary" style="margin-top: 18px;">Connect</button>
             <div id="status-badge" class="status-badge" style="margin-top: 18px;">
                 <span class="dot"></span>
-                <span id="status-text">Terputus</span>
+                <span id="status-text">Disconnected</span>
             </div>
         </div>
 
-        <!-- Panel Kontrol Audio -->
+        <!-- Audio Control Panel -->
         <div class="control-grid">
             <button id="btn-mic" class="btn control-btn" disabled>
                 <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></svg>
-                <span>Mulai Mikrofon</span>
+                <span>Start Microphone</span>
             </button>
             <button id="btn-desktop" class="btn control-btn" disabled>
                 <svg fill="currentColor" viewBox="0 0 24 24"><path d="M21 2H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7l-2 3v1h8v-1l-2-3h7c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H3V4h18v12z"/></svg>
-                <span>Mulai Desktop Audio</span>
+                <span>Start Desktop Audio</span>
             </button>
         </div>
 
-        <!-- Terminal Hasil Transkripsi -->
+        <!-- Transcription Results Terminal -->
         <div class="transcript-container">
             <div class="transcript-header">
-                <h2>Log Transkripsi (Mandarin)</h2>
+                <h2>Transcription Log (Mandarin)</h2>
                 <div class="transcript-actions">
-                    <button id="btn-copy" class="btn btn-icon">Salin Semua</button>
-                    <button id="btn-clear" class="btn btn-icon">Hapus Layar</button>
+                    <button id="btn-copy" class="btn btn-icon">Copy All</button>
+                    <button id="btn-clear" class="btn btn-icon">Clear Screen</button>
                 </div>
             </div>
             <div id="transcript-box" class="transcript-box">
-                <div class="log-item system">Belum terhubung ke server websocket. Silakan hubungkan terlebih dahulu.</div>
+                <div class="log-item system">Not connected to websocket server. Please connect first.</div>
             </div>
         </div>
     </div>
 </div>
 
-<div id="toast" class="toast">Teks disalin ke clipboard!</div>
+<div id="toast" class="toast">Text copied to clipboard!</div>
 
 <script>
-    // Inisialisasi WebSocket URL Default sesuai dengan host browser
+    // Initialize Default WebSocket URL based on browser host
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const defaultHost = window.location.host ? window.location.host : 'localhost:9099';
     document.getElementById('ws-url').value = `${protocol}//${defaultHost}/ws/audio`;
@@ -526,29 +526,29 @@
     function connectServer() {
         const url = wsUrlInput.value.trim();
         if (!url) {
-            addLog("Error: WebSocket URL tidak boleh kosong.", 'system');
+            addLog("Error: WebSocket URL cannot be empty.", 'system');
             return;
         }
 
         btnConnect.disabled = true;
-        btnConnect.textContent = "Menghubungkan...";
-        addLog(`Mencoba terhubung ke ${url}...`, 'system');
+        btnConnect.textContent = "Connecting...";
+        addLog(`Attempting to connect to ${url}...`, 'system');
 
         try {
             socket = new WebSocket(url);
             
             socket.onopen = () => {
                 btnConnect.disabled = false;
-                btnConnect.textContent = "Putuskan";
+                btnConnect.textContent = "Disconnect";
                 btnConnect.className = "btn btn-danger";
                 
                 statusBadge.className = "status-badge connected";
-                statusText.textContent = "Terhubung";
+                statusText.textContent = "Connected";
                 
                 btnMic.disabled = false;
                 btnDesktop.disabled = false;
                 
-                addLog("Terhubung ke server translation.", 'system');
+                addLog("Connected to translation server.", 'system');
             };
 
             socket.onmessage = (event) => {
@@ -566,11 +566,11 @@
 
             socket.onclose = () => {
                 handleDisconnectUI();
-                addLog("Koneksi ditutup oleh server atau terputus.", 'system');
+                addLog("Connection closed by server or disconnected.", 'system');
             };
 
             socket.onerror = (error) => {
-                addLog("WebSocket Error: Gagal terhubung ke server.", 'system');
+                addLog("WebSocket Error: Failed to connect to server.", 'system');
                 handleDisconnectUI();
             };
 
@@ -590,18 +590,18 @@
     function handleDisconnectUI() {
         socket = null;
         btnConnect.disabled = false;
-        btnConnect.textContent = "Hubungkan";
+        btnConnect.textContent = "Connect";
         btnConnect.className = "btn btn-primary";
         
         statusBadge.className = "status-badge";
-        statusText.textContent = "Terputus";
+        statusText.textContent = "Disconnected";
         
         btnMic.disabled = true;
         btnDesktop.disabled = true;
         btnMic.classList.remove('active');
         btnDesktop.classList.remove('active');
-        btnMic.querySelector('span').textContent = "Mulai Mikrofon";
-        btnDesktop.querySelector('span').textContent = "Mulai Desktop Audio";
+        btnMic.querySelector('span').textContent = "Start Microphone";
+        btnDesktop.querySelector('span').textContent = "Start Desktop Audio";
     }
 
     function downsampleBuffer(buffer, inputSampleRate, outputSampleRate) {
@@ -637,7 +637,7 @@
             return;
         }
 
-        addLog("Mempersiapkan perekaman audio...", 'system');
+        addLog("Preparing audio recording...", 'system');
 
         try {
             if (sourceType === 'mic') {
@@ -650,7 +650,7 @@
                     video: false
                 });
             } else if (sourceType === 'desktop') {
-                // getDisplayMedia untuk macOS/Windows loopback audio secara native
+                // getDisplayMedia for native macOS/Windows loopback audio
                 const displayStream = await navigator.mediaDevices.getDisplayMedia({
                     video: {
                         width: 1,
@@ -665,27 +665,27 @@
 
                 const audioTracks = displayStream.getAudioTracks();
                 if (audioTracks.length === 0) {
-                    // Bersihkan stream video jika ada
+                    // Clean up video stream if any
                     displayStream.getTracks().forEach(track => track.stop());
-                    // Gunakan in-UI notification ketimbang alert()
-                    addLog("Peringatan: Pastikan Anda mencentang opsi 'Share system audio' saat membagikan layar.", 'system');
+                    // Use in-UI notification instead of alert()
+                    addLog("Warning: Make sure to check the 'Share system audio' option when sharing screen.", 'system');
                     return;
                 }
 
-                // Berhenti track video karena kita tidak butuh videonya
+                // Stop video track as we do not need video
                 displayStream.getVideoTracks().forEach(track => track.stop());
                 
-                // Gunakan hanya audio track
+                // Use only audio track
                 mediaStream = new MediaStream(audioTracks);
             }
 
-            // Inisialisasi AudioContext dengan sample rate default browser
+            // Initialize AudioContext with browser default sample rate
             audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
             audioSourceNode = audioContext.createMediaStreamSource(mediaStream);
             
-            // ScriptProcessorNode untuk memproses chunk data.
-            // Gunakan buffer size 4096. 4096 samples pada 16kHz adalah ~0.25 detik.
+            // ScriptProcessorNode to process data chunks.
+            // Use buffer size 4096. 4096 samples at 16kHz is ~0.25 seconds.
             processorNode = audioContext.createScriptProcessor(4096, 1, 1);
             
             processorNode.onaudioprocess = (e) => {
@@ -694,14 +694,14 @@
                 const inputData = e.inputBuffer.getChannelData(0); // Float32Array (Mono)
                 const downsampledData = downsampleBuffer(inputData, audioContext.sampleRate, 16000);
                 
-                // Konversi Float32Array [-1.0, 1.0] ke Int16Array PCM 16-bit
+                // Convert Float32Array [-1.0, 1.0] to Int16Array PCM 16-bit
                 const pcmData = new Int16Array(downsampledData.length);
                 for (let i = 0; i < downsampledData.length; i++) {
                     const sample = Math.max(-1, Math.min(1, downsampledData[i]));
                     pcmData[i] = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
                 }
                 
-                // Kirim binary buffer ke websocket server
+                // Send binary buffer to websocket server
                 socket.send(pcmData.buffer);
             };
 
@@ -712,22 +712,22 @@
             activeSource = sourceType;
 
             statusBadge.className = "status-badge connected active-recording";
-            statusText.textContent = "Merekam";
+            statusText.textContent = "Recording";
 
             if (sourceType === 'mic') {
                 btnMic.classList.add('active');
-                btnMic.querySelector('span').textContent = "Berhenti Mikrofon";
+                btnMic.querySelector('span').textContent = "Stop Microphone";
                 btnDesktop.disabled = true;
-                addLog("Perekaman mikrofon berjalan. Mulailah berbicara Mandarin...", 'system');
+                addLog("Microphone recording in progress. Please start speaking Mandarin...", 'system');
             } else {
                 btnDesktop.classList.add('active');
-                btnDesktop.querySelector('span').textContent = "Berhenti Desktop Audio";
+                btnDesktop.querySelector('span').textContent = "Stop Desktop Audio";
                 btnMic.disabled = true;
-                addLog("Perekaman desktop audio berjalan. Putar audio Mandarin...", 'system');
+                addLog("Desktop audio recording in progress. Play Mandarin audio...", 'system');
             }
 
         } catch (err) {
-            addLog(`Gagal mengakses perangkat: ${err.message}`, 'system');
+            addLog(`Failed to access device: ${err.message}`, 'system');
             stopRecording();
         }
     }
@@ -737,7 +737,7 @@
 
         isRecording = false;
 
-        // Bersihkan node audio
+        // Clear audio nodes
         if (processorNode) {
             processorNode.disconnect();
             processorNode = null;
@@ -753,24 +753,24 @@
             audioContext = null;
         }
 
-        // Hentikan semua track media
+        // Stop all media tracks
         if (mediaStream) {
             mediaStream.getTracks().forEach(track => track.stop());
             mediaStream = null;
         }
 
-        // Kembalikan status tombol
+        // Reset button states
         btnMic.disabled = false;
         btnDesktop.disabled = false;
         btnMic.classList.remove('active');
         btnDesktop.classList.remove('active');
-        btnMic.querySelector('span').textContent = "Mulai Mikrofon";
-        btnDesktop.querySelector('span').textContent = "Mulai Desktop Audio";
+        btnMic.querySelector('span').textContent = "Start Microphone";
+        btnDesktop.querySelector('span').textContent = "Start Desktop Audio";
 
         statusBadge.className = "status-badge connected";
-        statusText.textContent = "Terhubung";
+        statusText.textContent = "Connected";
 
-        addLog(`Perekaman ${activeSource === 'mic' ? 'mikrofon' : 'desktop audio'} dihentikan.`, 'system');
+        addLog(`Recording of ${activeSource === 'mic' ? 'microphone' : 'desktop audio'} stopped.`, 'system');
         activeSource = null;
     }
 
@@ -778,31 +778,31 @@
     btnMic.addEventListener('click', () => startRecording('mic'));
     btnDesktop.addEventListener('click', () => startRecording('desktop'));
 
-    // Salin Teks
+    // Copy Text
     btnCopy.addEventListener('click', () => {
         const bubbles = transcriptBox.querySelectorAll('.translation-bubble');
         if (bubbles.length === 0) {
-            showToast("Tidak ada teks transkripsi untuk disalin.");
+            showToast("No transcription text to copy.");
             return;
         }
         const textToCopy = Array.from(bubbles)
             .map(b => {
                 const zhText = b.querySelector('.zh-text').textContent.replace('🗣️ ', '');
                 const idText = b.querySelector('.id-text').textContent.replace('🇮🇩 ', '');
-                return `Mandarin: ${zhText}\nIndonesia: ${idText}`;
+                return `Mandarin: ${zhText}\nIndonesian: ${idText}`;
             })
             .join('\n\n');
         
         navigator.clipboard.writeText(textToCopy)
-            .then(() => showToast("Teks disalin ke clipboard!"))
-            .catch(err => addLog(`Gagal menyalin: ${err.message}`, 'system'));
+            .then(() => showToast("Text copied to clipboard!"))
+            .catch(err => addLog(`Failed to copy: ${err.message}`, 'system'));
     });
 
-    // Bersihkan Log/Layar
+    // Clear Log/Screen
     btnClear.addEventListener('click', () => {
-        // Gunakan replaceChildren untuk membersihkan element secara aman sesuai modul sanitasi XSS
+        // Use replaceChildren to clear elements safely in compliance with XSS sanitization modules
         transcriptBox.replaceChildren();
-        addLog("Layar dibersihkan.", 'system');
+        addLog("Screen cleared.", 'system');
     });
 </script>
 </body>

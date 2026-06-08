@@ -4,27 +4,27 @@ import json
 import wave
 
 async def send_audio(websocket, wav_path):
-    print(f"Membuka file {wav_path}...")
+    print(f"Opening file {wav_path}...")
     with wave.open(wav_path, 'rb') as wav_file:
         params = wav_file.getparams()
-        print(f"Format Audio: {params.nchannels} channel, {params.sampwidth} bytes/sample, {params.framerate}Hz")
+        print(f"Audio Format: {params.nchannels} channel, {params.sampwidth} bytes/sample, {params.framerate}Hz")
         
-        # Kirim data per chunk (4096 frame = 8192 bytes = 256ms audio)
+        # Send data per chunk (4096 frames = 8192 bytes = 256ms audio)
         chunk_size = 4096
         
-        print("Mulai mengirimkan data audio stream...")
+        print("Started sending audio stream data...")
         while True:
             data = wav_file.readframes(chunk_size)
             if not data:
                 break
             
-            # Kirim data biner PCM ke websocket
+            # Send binary PCM data to websocket
             await websocket.send(data)
             
-            # Simulasi pengiriman real-time dengan memberi jeda 250ms
+            # Simulate real-time sending by adding a 250ms delay
             await asyncio.sleep(0.25)
             
-        print("Pengiriman data audio selesai. Menunggu respons sisa dari server...")
+        print("Audio data transmission finished. Waiting for remaining responses from server...")
         await asyncio.sleep(18.0)
 
 async def receive_responses(websocket):
@@ -34,12 +34,12 @@ async def receive_responses(websocket):
                 payload = json.loads(message)
                 print("\n==========================================")
                 print(f"🗣️  [Mandarin STT]   : {payload.get('zh')}")
-                print(f"🇮🇩  [Terjemahan ID]  : {payload.get('id')}")
+                print(f"🇮🇩  [ID Translation]  : {payload.get('id')}")
                 print("==========================================")
             except json.JSONDecodeError:
-                print(f"Pesan non-JSON diterima: {message}")
+                print(f"Non-JSON message received: {message}")
     except websockets.exceptions.ConnectionClosed:
-        print("Koneksi WebSocket ditutup.")
+        print("WebSocket connection closed.")
     except asyncio.CancelledError:
         pass
 
@@ -47,22 +47,22 @@ async def main():
     uri = "ws://127.0.0.1:9099/ws/audio"
     wav_path = "dummy_chinese.wav"
     
-    print(f"Mencoba menyambung ke server di {uri}...")
+    print(f"Attempting to connect to server at {uri}...")
     try:
         async with websockets.connect(uri) as websocket:
-            print("Berhasil tersambung ke WebSocket server!")
+            print("Successfully connected to WebSocket server!")
             
-            # Jalankan sender dan receiver secara konkuren
+            # Run sender and receiver concurrently
             send_task = asyncio.create_task(send_audio(websocket, wav_path))
             receive_task = asyncio.create_task(receive_responses(websocket))
             
-            # Jalankan hingga pengiriman selesai
+            # Run until transmission is complete
             await send_task
             receive_task.cancel()
             await asyncio.gather(receive_task, return_exceptions=True)
-            print("Pengujian mandiri selesai.")
+            print("Self-test finished.")
     except Exception as e:
-        print(f"Terjadi kesalahan saat pengujian: {e}")
+        print(f"An error occurred during testing: {e}")
 
 if __name__ == "__main__":
     asyncio.run(main())

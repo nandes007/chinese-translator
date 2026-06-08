@@ -1,48 +1,48 @@
 import pyaudiowpatch as pyaudio
-import websocket # Berasal dari websocket-client
+import websocket # From websocket-client
 import time
 import queue
 
-# 1. Buka koneksi ke server FastAPI di WSL
-# URL ini harus sama dengan route yang ada di FastAPI
+# 1. Open connection to FastAPI server in WSL
+# This URL must match the route in FastAPI
 WS_URL = "ws://localhost:9099/ws/audio"
 ws = websocket.WebSocket()
 
 try:
     ws.connect(WS_URL)
-    print(f"Berhasil terhubung ke {WS_URL}")
+    print(f"Successfully connected to {WS_URL}")
 except Exception as e:
-    print(f"Gagal terhubung ke server: {e}")
+    print(f"Failed to connect to server: {e}")
     exit(1)
 
 p = pyaudio.PyAudio()
 
-# Cari perangkat WASAPI Default (Speaker)
+# Search for Default WASAPI device (Speaker)
 wasapi_info = p.get_host_api_info_by_type(pyaudio.paWASAPI)
 default_speakers = p.get_device_info_by_index(wasapi_info["defaultOutputDevice"])
 
-# Temukan perangkat loopback yang sesuai
+# Find the appropriate loopback device
 if not default_speakers.get("isLoopbackDevice", False):
     for loopback in p.get_loopback_device_info_generator():
         if default_speakers["name"] in loopback["name"]:
             default_speakers = loopback
             break
     else:
-        print("Gagal menemukan perangkat loopback WASAPI default.")
+        print("Failed to find default WASAPI loopback device.")
         p.terminate()
         ws.close()
         exit(1)
 
-# Queue untuk menampung data audio secara thread-safe
+# Queue to hold audio data in a thread-safe manner
 audio_queue = queue.Queue()
 
-# 2. Fungsi callback untuk menerima data audio dari driver
+# 2. Callback function to receive audio data from the driver
 def callback(in_data, frame_count, time_info, status):
-    # Masukkan data audio mentah ke queue, jangan lakukan I/O di sini
+    # Put raw audio data into the queue, do not perform I/O here
     audio_queue.put(in_data)
     return (None, pyaudio.paContinue)
 
-# 3. Buka stream audio
+# 3. Open audio stream
 stream = p.open(
     format=pyaudio.paInt16,
     channels=default_speakers["maxInputChannels"],
@@ -53,24 +53,24 @@ stream = p.open(
     stream_callback=callback
 )
 
-print("Mulai menangkap audio rapat. Tekan Ctrl+C untuk berhenti.")
+print("Start capturing meeting audio. Press Ctrl+C to stop.")
 stream.start_stream()
 
 try:
     while stream.is_active():
         try:
-            # Ambil data dari queue dengan timeout agar loop tetap sensitif terhadap KeyboardInterrupt
+            # Get data from the queue with a timeout so the loop remains sensitive to KeyboardInterrupt
             data = audio_queue.get(timeout=0.1)
             ws.send_binary(data)
         except queue.Empty:
             continue
         except Exception as e:
-            print(f"Koneksi terputus atau error: {e}")
+            print(f"Connection lost or error: {e}")
             break
 except KeyboardInterrupt:
-    print("\nMenghentikan perekaman...")
+    print("\nStopping recording...")
 finally:
-    # Pastikan pembersihan dilakukan secara aman
+    # Ensure clean-up is done safely
     try:
         if stream.is_active():
             stream.stop_stream()
@@ -89,4 +89,4 @@ finally:
     except Exception:
         pass
         
-    print("Selesai.")
+    print("Finished.")
